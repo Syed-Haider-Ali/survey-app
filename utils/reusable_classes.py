@@ -6,3 +6,5 @@ class TimeStamps(models.Model):
 
     class Meta:
         abstract = True
+
+

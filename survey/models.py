@@ -16,6 +16,7 @@ class Question(TimeStamps):
 class QuestionType(TimeStamps):
     title = models.CharField(max_length=100)
     description = models.CharField(max_length=200)
+    created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
 class QuestionOption(TimeStamps):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="question_options")
