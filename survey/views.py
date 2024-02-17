@@ -15,6 +15,9 @@ class SurveyView(ModelViewSet):
     def list(self, request, *args, **kwargs):
         return survey_controller.list(request)
 
+    def destroy(self, request, *args, **kwargs):
+        return survey_controller.destroy(request)
+
 
 class QuestionTypeView(ModelViewSet):
     authentication_classes = (JWTAuthentication,)

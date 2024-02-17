@@ -1,5 +1,5 @@
 from .serializers import (SurveyFormSerializer, QuestionSerializer, QuestionOptionSerializer, QuestionTypeSerializer)
-from utils.reusable_methods import get_first_error_message, paginate_data
+from utils.reusable_methods import get_first_error_message, paginate_data, get_params
 from utils.response_messages import *
 from utils.helper import create_response, paginate_data
 from django.db import transaction
@@ -67,6 +67,31 @@ class SurveyController:
                 "data": serialized_data,
             }
             return create_response(response_data, SUCCESSFUL, 200)
+        except Exception as e:
+            return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
+
+
+    def destroy(self, request):
+        try:
+            if 'id' in request.query_params:
+                kwargs = {}
+                kwargs = get_params("id", request.query_params.get('id'), kwargs)
+                instances = self.serializer_class.Meta.model.objects.filter(**kwargs)
+                if instances:
+                    for i in instances:
+                        # questions = Question.objects.filter(survey_form=i.id)
+                        questions = i.survey_questions.all()
+                        for que in questions:
+                            options = que.question_options.all()
+                            if options:
+                                options.delete()
+                        questions.delete()
+                    instances.delete()
+                    return create_response({}, SUCCESSFUL, 200)
+                else:
+                    return create_response({}, NOT_FOUND, 404)
+            else:
+                return create_response({}, ID_NOT_PROVIDED, 400)
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
 

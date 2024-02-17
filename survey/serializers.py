@@ -19,6 +19,11 @@ class QuestionTypeSerializer(serializers.ModelSerializer):
         model = QuestionType
         fields = '__all__'
 
+class QuestionTypeListingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionType
+        fields = ['id', 'title']
+
 
 class QuestionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -27,8 +32,8 @@ class QuestionSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
         data = super().to_representation(instance)
-        data['type'] = QuestionTypeSerializer(instance.type).data
-        data['options'] = QuestionOptionSerializer(instance.question_options.all(), many=True).data if instance.question_options else None
+        data['type'] = QuestionTypeListingSerializer(instance.type).data
+        data['options'] = QuestionOptionListingSerializer(instance.question_options.all(), many=True).data if instance.question_options else None
         return data
 
 
@@ -36,6 +41,11 @@ class QuestionOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestionOption
         fields = '__all__'
+
+class QuestionOptionListingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = QuestionOption
+        fields = ['id', 'option']
 
 
 class SurveryFormQuestionAnswerSerializer(serializers.ModelSerializer):

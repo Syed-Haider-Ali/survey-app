@@ -1,6 +1,7 @@
 import datetime
 import jwt
 import random
+import ast
 from cryptography.fernet import Fernet
 from rest_framework.utils.serializer_helpers import ReturnList
 from authentication.settings import JWT_ENCODING_SECRET_KEY, JWT_TOKEN_EXPIRY_DELTA
@@ -71,3 +72,23 @@ def paginate_data(data, request):
         return data
     else:
         return data
+
+
+def get_params(name, instance, kwargs):
+    instance = check_for_one_or_many(instance)
+    if type(instance) == list or type(instance) == tuple:
+        kwargs[f"{name}__in"] = instance
+    elif type(instance) == str and instance.lower() in ["true", "false"]:
+        kwargs[f"{name}"] = bool(instance.lower() == "true")
+    else:
+        kwargs[f"{name}"] = instance
+    return kwargs
+
+
+def check_for_one_or_many(instances):
+    try:
+        instance = ast.literal_eval(instances)
+        return instance
+    except Exception as e:
+        print(e)
+        return instances
