@@ -105,3 +105,9 @@ class LoginSerializer(serializers.Serializer):
         if User.objects.filter(username=instance["username"], is_active=False, is_locked=True).exists():
             raise serializers.ValidationError("Your account has been deactivated.")
         return instance
+
+
+class UserListingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['guid','get_full_name']

@@ -1,73 +1,78 @@
 from .serializers import (SurveyFormSerializer, QuestionSerializer, QuestionOptionSerializer, QuestionTypeSerializer)
-from utils.reusable_methods import get_first_error_message
+from utils.reusable_methods import get_first_error_message, paginate_data
 from utils.response_messages import *
 from utils.helper import create_response, paginate_data
 from django.db import transaction
 from .models import QuestionOption, Question
+from .filters import SurveyFormFilter
+
+
 
 class SurveyController:
     serializer_class = SurveyFormSerializer
     question_serializer = QuestionSerializer
+    filterset_class = SurveyFormFilter
     def create(self, request):
         try:
             request.POST._mutable = True
             request.data['created_by'] = request.user.guid
             request.POST._mutable = False
 
-            questions = request.data.pop("questions") if request.data['questions'] else None
+            questions = request.data.pop("questions") if 'questions' in request.data else None
+            if not questions:
+                return create_response({}, 'Survey must contain questions', 400)
+            elif len(questions) < 5:
+                return create_response({}, "Add atleast 5 Questions", 400)
+            elif len(questions) > 10:
+                return create_response({}, "Allowed maximum 10 Questions", 400)
 
             serialized_data = self.serializer_class(data=request.data)
             if serialized_data.is_valid():
                 with transaction.atomic():
                     response = serialized_data.save()
 
-                    if questions:
-                        if len(questions) < 5:
-                            transaction.set_rollback(True)
-                            return create_response({}, "Survey should contain atleast 5 Questions", 400)
-                        elif len(questions) > 10:
-                            transaction.set_rollback(True)
-                            return create_response({}, "Survey should contains maximum 10 Questions", 400)
-
-                        questions_list = []
-                        for i in questions:
-                            options = request.data.pop("options") if i['options'] else None
-                            #if options then create question in single query
+                    for que in questions:
+                        options = que.pop("options") if 'options' in que else None
+                        que['survey_form'] = response.id
+                        serialized_question = QuestionSerializer(data=que)
+                        if serialized_question.is_valid():
+                            question = serialized_question.save()
                             if options:
-                                serialized_question = QuestionSerializer(data=i)
-                                if serialized_question.is_valid():
-                                    question = serialized_question.save()
-                                    options_list = [QuestionOption(title=o, question=question) for o in options]
-                                    QuestionOption.objects.bulk_create(options_list)
-                                else:
-                                    transaction.set_rollback(True)
-                                    return create_response({}, get_first_error_message(serialized_question.errors,
-                                                                                       UNSUCCESSFUL), 400)
-                            #if question is descriptive create in bulk create to reduce query.
-                            else:
-                                questions_list.append(Question(question))
+                                options_list = [QuestionOption(option=o, question=question) for o in options]
+                                QuestionOption.objects.bulk_create(options_list)
+                        else:
+                            transaction.set_rollback(True)
+                            return create_response({}, get_first_error_message(serialized_question.errors,
+                                                                               UNSUCCESSFUL), 400)
 
-                            serialized_question = QuestionSerializer(data=i)
-                            if serialized_question.is_valid():
-                                question = serialized_question.save()
-                                if options:
-                                   options_list = [QuestionOption(title=o, question=question) for o in options]
-                                   QuestionOption.objects.bulk_create(options_list)
-                            else:
-                                transaction.set_rollback(True)
-                                return create_response({}, get_first_error_message(serialized_question.errors, UNSUCCESSFUL), 400)
+                return create_response(self.serializer_class(response).data, SUCCESSFUL, 200)
+            else:
+                return create_response({}, get_first_error_message(serialized_data.errors, UNSUCCESSFUL), 400)
+        except Exception as e:
+            return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
 
+    def list(self, request):
+        try:
+            instances = self.serializer_class.Meta.model.objects.all()
 
+            filtered_data = self.filterset_class(request.GET, queryset=instances)
+            data = filtered_data.qs
 
-                return create_response(response, SUCCESSFUL, 200)
-            return create_response({}, get_first_error_message(serialized_data.errors, UNSUCCESSFUL), 400)
+            paginated_data = paginate_data(data, request)
+            count = data.count()
+
+            serialized_data = self.serializer_class(paginated_data, many=True).data
+            response_data = {
+                "count": count,
+                "data": serialized_data,
+            }
+            return create_response(response_data, SUCCESSFUL, 200)
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
 
 
 class QuestionTypeController:
     serializer_class = QuestionTypeSerializer
-
     def create(self, request):
         try:
             request.POST._mutable = True
@@ -77,7 +82,7 @@ class QuestionTypeController:
             serialized_data = self.serializer_class(data=request.data)
             if serialized_data.is_valid():
                 response = serialized_data.save()
-                return create_response(response, SUCCESSFUL, 200)
+                return create_response(self.serializer_class(response).data, SUCCESSFUL, 200)
             return create_response({}, get_first_error_message(serialized_data.errors, UNSUCCESSFUL),400)
 
         except Exception as e:

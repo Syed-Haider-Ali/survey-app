@@ -8,17 +8,17 @@ class SurveyForm(TimeStamps):
     description = models.TextField(null=True, blank=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
-class Question(TimeStamps):
+class Question(models.Model):
     survey_form = models.ForeignKey(SurveyForm, on_delete=models.CASCADE, related_name='survey_questions')
     type = models.ForeignKey('QuestionType', on_delete=models.CASCADE, related_name='question_types')
-    body = models.TextField()
+    question = models.TextField()
 
 class QuestionType(TimeStamps):
     title = models.CharField(max_length=100)
     description = models.CharField(max_length=200)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
 
-class QuestionOption(TimeStamps):
+class QuestionOption(models.Model):
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name="question_options")
     option = models.CharField(max_length=500)
 

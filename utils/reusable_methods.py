@@ -4,6 +4,7 @@ import random
 from cryptography.fernet import Fernet
 from rest_framework.utils.serializer_helpers import ReturnList
 from authentication.settings import JWT_ENCODING_SECRET_KEY, JWT_TOKEN_EXPIRY_DELTA
+from rest_framework.pagination import LimitOffsetPagination
 
 
 def encrypt_token(token):
@@ -59,3 +60,14 @@ def get_first_error_message(serialized_errors, default_message=""):
 def generate_six_length_random_number():
     random_number = random.SystemRandom().randint(100000, 999999)
     return random_number
+
+
+def paginate_data(data, request):
+    limit = request.query_params.get('limit')
+    offset = request.query_params.get('offset')
+    if limit and offset:
+        pagination = LimitOffsetPagination()
+        data = pagination.paginate_queryset(data, request)
+        return data
+    else:
+        return data
