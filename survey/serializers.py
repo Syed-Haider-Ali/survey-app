@@ -2,6 +2,7 @@ from rest_framework import serializers
 from user_auth.user_serializer import UserListingSerializer
 from .models import *
 
+
 class SurveyFormSerializer(serializers.ModelSerializer):
     class Meta:
         model = SurveyForm
@@ -14,10 +15,17 @@ class SurveyFormSerializer(serializers.ModelSerializer):
         return data
 
 
+class SurveyFormListingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = SurveyForm
+        fields = ['id', 'title']
+
+
 class QuestionTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestionType
         fields = '__all__'
+
 
 class QuestionTypeListingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -37,10 +45,22 @@ class QuestionSerializer(serializers.ModelSerializer):
         return data
 
 
+class QuestionListingSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Question
+        fields = ['id', 'question']
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['type'] = QuestionTypeListingSerializer(instance.type).data
+        return data
+
+
 class QuestionOptionSerializer(serializers.ModelSerializer):
     class Meta:
         model = QuestionOption
         fields = '__all__'
+
 
 class QuestionOptionListingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -52,5 +72,14 @@ class SurveryFormQuestionAnswerSerializer(serializers.ModelSerializer):
     class Meta:
         model = SurveryFormQuestionAnswer
         fields = '__all__'
+
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        data['survey_form'] = SurveyFormListingSerializer(instance.survey_form).data
+        data['question'] = QuestionListingSerializer(instance.question).data
+        data['chosen_answer'] = QuestionOptionListingSerializer(instance.chosen_answer).data if instance.chosen_answer else None
+        data['answered_by'] = UserListingSerializer(instance.answered_by).data
+        return data
+
 
 

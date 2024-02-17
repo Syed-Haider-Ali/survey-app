@@ -1,11 +1,11 @@
-from .serializers import (SurveyFormSerializer, QuestionSerializer, QuestionOptionSerializer, QuestionTypeSerializer)
+from .serializers import (SurveyFormSerializer, QuestionSerializer, SurveryFormQuestionAnswerSerializer, QuestionTypeSerializer)
 from utils.reusable_methods import get_first_error_message, paginate_data, get_params
 from utils.response_messages import *
 from utils.helper import create_response, paginate_data
 from django.db import transaction
-from .models import QuestionOption, Question
+from .models import QuestionOption, Question, SurveryFormQuestionAnswer
 from .filters import SurveyFormFilter
-
+from user_auth.models import User
 
 
 class SurveyController:
@@ -34,7 +34,7 @@ class SurveyController:
                     for que in questions:
                         options = que.pop("options") if 'options' in que else None
                         que['survey_form'] = response.id
-                        serialized_question = QuestionSerializer(data=que)
+                        serialized_question = self.question_serializer(data=que)
                         if serialized_question.is_valid():
                             question = serialized_question.save()
                             if options:
@@ -53,7 +53,7 @@ class SurveyController:
 
     def list(self, request):
         try:
-            instances = self.serializer_class.Meta.model.objects.all()
+            instances = self.serializer_class.Meta.model.objects.select_related('created_by').prefetch_related('survey_questions','survey_questions__question_options', 'survey_questions__type').all()
 
             filtered_data = self.filterset_class(request.GET, queryset=instances)
             data = filtered_data.qs
@@ -70,7 +70,6 @@ class SurveyController:
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
 
-
     def destroy(self, request):
         try:
             if 'id' in request.query_params:
@@ -78,9 +77,8 @@ class SurveyController:
                 kwargs = get_params("id", request.query_params.get('id'), kwargs)
                 instances = self.serializer_class.Meta.model.objects.filter(**kwargs)
                 if instances:
-                    for i in instances:
-                        # questions = Question.objects.filter(survey_form=i.id)
-                        questions = i.survey_questions.all()
+                    for ins in instances:
+                        questions = ins.survey_questions.all()
                         for que in questions:
                             options = que.question_options.all()
                             if options:
@@ -94,6 +92,8 @@ class SurveyController:
                 return create_response({}, ID_NOT_PROVIDED, 400)
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
+
+
 
 
 class QuestionTypeController:
@@ -112,3 +112,80 @@ class QuestionTypeController:
 
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
+
+
+class SubmitSurveyController:
+    serializer_class = SurveryFormQuestionAnswerSerializer
+    def create(self, request):
+        try:
+            if not 'answers' in request.data:
+                return create_response({}, 'Answers Missing', 400)
+            survey_instance = SurveyFormSerializer.Meta.model.objects.filter(id=request.data['survey_form']).first()
+            answers = request.data.pop('answers')
+            question_ids = [i['question'] for i in answers if i is not None]
+            questions = Question.objects.filter(id__in=question_ids)
+            answers_list = []
+            for index, ans in enumerate(answers):
+                ans['answered_by'] = request.user
+                ans['survey_form'] = survey_instance
+                ans['question'] = questions[index]
+                if 'chosen_answer' in ans:
+                    option = QuestionOption.objects.filter(id=ans['chosen_answer']).first()
+                    ans['chosen_answer'] = option
+                answers_list.append(SurveryFormQuestionAnswer(**ans))
+
+            SurveryFormQuestionAnswer.objects.bulk_create(answers_list)
+            return create_response({}, SUCCESSFUL, 200)
+
+        except Exception as e:
+            return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
+
+
+class SurveyResultController:
+    serializer_class = SurveryFormQuestionAnswerSerializer
+
+    def list(self, request):
+        try:
+            if 'id' in request.query_params:
+                instances = self.serializer_class.Meta.model.objects.select_related('survey_form', 'question', 'question__type', 'chosen_answer','answered_by').filter(survey_form=request.query_params.get('id')).order_by('created_at', 'answered_by')
+                distinct_responders = self.serializer_class.Meta.model.objects.filter(survey_form=request.query_params.get('id')).values('answered_by').distinct()
+                distinct_guids = [i['answered_by'] for i in distinct_responders]
+
+                serialized_data = self.serializer_class(instances, many=True).data
+
+                # preparing response group by responder
+                responses = []
+                for guid in distinct_guids:
+                    user_response = [i for i in serialized_data if i['answered_by']['guid'] == str(guid)]
+                    temp = []
+                    for us in user_response:
+                        obj = {}
+                        obj['question'] = us['question']
+                        if us['float_answer']:
+                            obj['float_answer'] = us['float_answer']
+                        elif us['descriptive_answer']:
+                            obj['descriptive_answer'] = us['descriptive_answer']
+                        elif us['chosen_answer']:
+                            obj['chosen_answer'] = us['chosen_answer']
+                        temp.append(obj)
+                    response = {
+                        'answered_by': user_response[0]['answered_by'],
+                        'response': temp
+                    }
+                    responses.append(response)
+                response_data = {
+                    "total_responses": len(responses),
+                    "data": {
+                        'survey': serialized_data[0]['survey_form'],
+                        'responses': responses
+                    }
+                }
+                return create_response(response_data, SUCCESSFUL, 200)
+            else:
+                return create_response({}, ID_NOT_PROVIDED, 400)
+        except Exception as e:
+            return create_response({'error': str(e)}, UNSUCCESSFUL, 500)
+
+
+
+
