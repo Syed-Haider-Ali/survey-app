@@ -56,7 +56,7 @@ class LoginController:
             if not serialized_data.is_valid():
                 return create_response({},get_first_error_message(serialized_data.errors, UNSUCCESSFUL), 400)
 
-            user = authenticate( username=request.data['username'], password=request.data['password'])
+            user = authenticate(username=request.data['username'], password=request.data['password'])
             if not user:
                 return create_response({}, message=INCORRECT_EMAIL_OR_PASSWORD, status_code=400)
 
