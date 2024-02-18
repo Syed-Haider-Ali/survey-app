@@ -121,7 +121,6 @@ class QuestionTypeController:
                 response = serialized_data.save()
                 return create_response(self.serializer_class(response).data, SUCCESSFUL, 200)
             return create_response({}, get_first_error_message(serialized_data.errors, UNSUCCESSFUL),400)
-
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
 
