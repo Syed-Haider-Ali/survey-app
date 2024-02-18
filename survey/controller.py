@@ -26,6 +26,10 @@ class SurveyController:
             elif len(questions) > 10:
                 return create_response({}, "Allowed maximum 10 Questions", 400)
 
+            question_types = [i['type'] for i in questions]
+            unique_types = list(set(question_types))
+            type_instances = QuestionTypeSerializer.Meta.model.objects.filter(id__in=unique_types)
+
             serialized_data = self.serializer_class(data=request.data)
             if serialized_data.is_valid():
                 with transaction.atomic():
@@ -35,6 +39,14 @@ class SurveyController:
                         options = que.pop("options") if 'options' in que else None
                         que['survey_form'] = response.id
                         serialized_question = self.question_serializer(data=que)
+
+                        for i in type_instances:
+                            if que['type'] == i.id:
+                                if i.title.lower() in ['dropdown', 'mcqs'] and not options:
+                                    return create_response({}, 'Dropdown/MCQs Questions must have options', 400)
+                                else:
+                                    break
+
                         if serialized_question.is_valid():
                             question = serialized_question.save()
                             if options:
@@ -110,6 +122,15 @@ class QuestionTypeController:
                 return create_response(self.serializer_class(response).data, SUCCESSFUL, 200)
             return create_response({}, get_first_error_message(serialized_data.errors, UNSUCCESSFUL),400)
 
+        except Exception as e:
+            return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
+
+
+    def list(self, request):
+        try:
+            instances = self.serializer_class.Meta.model.objects.all()
+            response_data = self.serializer_class(instances, many=True).data
+            return create_response(response_data, SUCCESSFUL, 200)
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
 

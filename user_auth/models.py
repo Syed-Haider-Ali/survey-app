@@ -5,7 +5,6 @@ from utils.reusable_methods import generate_access_token
 from utils.reusable_classes import TimeStamps
 
     
-
 class User(TimeStamps,AbstractUser):
 
     guid = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

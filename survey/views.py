@@ -26,6 +26,9 @@ class QuestionTypeView(ModelViewSet):
     def create(self, request, *args, **kwargs):
         return question_type_controller.create(request)
 
+    def list(self, request, *args, **kwargs):
+        return question_type_controller.list(request)
+
 class SubmitSurveyView(ModelViewSet):
     authentication_classes = (JWTAuthentication,)
 

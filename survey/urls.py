@@ -4,7 +4,7 @@ from .views import SurveyView, QuestionTypeView, SubmitSurveyView, SurveyResultV
 urlpatterns = [
     path('', SurveyView.as_view({'post': 'create', 'get': 'list', 'delete': 'destroy'})),
 
-    path('question/type', QuestionTypeView.as_view({'post': 'create'})),
+    path('question/type', QuestionTypeView.as_view({'post': 'create', 'get': 'list'})),
 
     path('submit/survey', SubmitSurveyView.as_view({'post': 'create'})),
 
