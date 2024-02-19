@@ -2,7 +2,7 @@ from django.urls import path
 from .views import SurveyView, QuestionTypeView, SubmitSurveyView, SurveyResultView
 
 urlpatterns = [
-    path('', SurveyView.as_view({'post': 'create', 'get': 'list', 'delete': 'destroy'})),
+    path('', SurveyView.as_view({'post': 'create', 'get': 'list', 'delete': 'destroy'}), name='survey_form'),
 
     path('question/type', QuestionTypeView.as_view({'post': 'create', 'get': 'list'})),
 

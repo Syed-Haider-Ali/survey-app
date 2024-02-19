@@ -16,9 +16,9 @@ class SurveyController:
         try:
             request.POST._mutable = True
             request.data['created_by'] = request.user.guid
+            questions = request.data.pop("questions") if 'questions' in request.data else None
             request.POST._mutable = False
 
-            questions = request.data.pop("questions") if 'questions' in request.data else None
             if not questions:
                 return create_response({}, 'Survey must contain questions', 400)
             elif len(questions) < 5:
@@ -27,7 +27,8 @@ class SurveyController:
                 return create_response({}, "Allowed maximum 10 Questions", 400)
 
             question_types = [i['type'] for i in questions]
-            unique_types = list(set(question_types))
+            alpha_ = list(map(int, question_types))
+            unique_types = list(set(alpha_))
             type_instances = QuestionTypeSerializer.Meta.model.objects.filter(id__in=unique_types)
 
             serialized_data = self.serializer_class(data=request.data)
@@ -41,7 +42,7 @@ class SurveyController:
                         serialized_question = self.question_serializer(data=que)
 
                         for i in type_instances:
-                            if que['type'] == i.id:
+                            if int(que['type']) == i.id:
                                 if i.title.lower() in ['dropdown', 'mcqs'] and not options:
                                     return create_response({}, 'Dropdown/MCQs Questions must have options', 400)
                                 else:
@@ -49,7 +50,7 @@ class SurveyController:
 
                         if serialized_question.is_valid():
                             question = serialized_question.save()
-                            if options:
+                            if options is not None:
                                 options_list = [QuestionOption(option=o, question=question) for o in options]
                                 QuestionOption.objects.bulk_create(options_list)
                         else:
@@ -112,9 +113,10 @@ class QuestionTypeController:
     serializer_class = QuestionTypeSerializer
     def create(self, request):
         try:
-            request.POST._mutable = True
-            request.data['created_by'] = request.user.guid
-            request.POST._mutable = False
+            if not 'created_by' in request.data:
+                request.POST._mutable = True
+                request.data['created_by'] = request.user.guid
+                request.POST._mutable = False
 
             serialized_data = self.serializer_class(data=request.data)
             if serialized_data.is_valid():
