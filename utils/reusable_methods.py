@@ -53,7 +53,6 @@ def get_first_error_message(serialized_errors, default_message=""):
             return message
         except:
             return serialized_error_dict[serialized_errors_keys[0]][0]
-
     except Exception as e:
         return default_message
     

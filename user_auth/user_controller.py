@@ -64,6 +64,7 @@ class LoginController:
                 "token": user.get_access_token(),
                 "name": user.get_full_name(),
                 "username":user.username,
+                "email": user.email
             }
             Token.objects.update_or_create(defaults={"token": response_data.get("token")},user_id=user.guid)
             user.failed_login_attempts = 0

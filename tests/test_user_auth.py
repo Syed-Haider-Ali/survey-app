@@ -3,7 +3,7 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APIClient
 from user_auth.models import User
-from django.contrib.auth.hashers import make_password
+from .data import user_obj
 
 
 
@@ -37,15 +37,8 @@ class TestRegister:
 @pytest.mark.django_db
 class TestLogin:
     def setup_method(self):
-        user_data = {
-            "first_name": "haider",
-            "email": "haider@gmail.com",
-            "username": "haider@gmail.com",
-            "password": make_password("admin1234"),
-            "is_active": True,
-            "is_locked": False
-        }
-        self.user = User.objects.create(**user_data)
+
+        self.user = User.objects.create(**user_obj())
         self.client = APIClient()
         self.url = reverse('login')
 

@@ -1,6 +1,5 @@
 from rest_framework.viewsets import ModelViewSet
-from rest_framework.permissions import IsAuthenticated, IsAdminUser
-
+from rest_framework.permissions import IsAuthenticated
 from utils.base_authentication import JWTAuthentication
 from user_auth.user_controller import *
 

@@ -6,197 +6,40 @@ from rest_framework.test import APIClient
 from user_auth.models import User
 from django.contrib.auth.hashers import make_password
 from survey.models import QuestionType
+from .data import survey_payload, user_obj
 
 
 @pytest.mark.django_db
 class TestCreateSurvey:
     def setup_method(self):
-        user_data = {
-            "first_name": "haider",
-            "email": "haider@gmail.com",
-            "username": "haider@gmail.com",
-            "password": make_password("admin1234"),
-            "is_active": True,
-            "is_locked": False
-        }
-        self.user = User.objects.create(**user_data)
+
+        self.client = APIClient()
+        self.user = User.objects.create(**user_obj())
+        self.client.force_authenticate(user=self.user)
         arr = [QuestionType(title='descriptive', created_by=self.user), QuestionType(title='dropdown', created_by=self.user)]
         self. q_type = QuestionType.objects.bulk_create(arr)
-        self.client = APIClient()
         self.url = reverse('survey_form')
 
     def test_survey_success(self):
-        self.client.force_authenticate(user=self.user)
-        data = {
-    "title":"Pakistan Zindabad",
-    "description":"Gathering Information Regarding Election 2024 Acceptance",
-    "questions":[
-        {
-            "question":"How long will you take to do this?",
-            "type":1
-        },
-        {
-            "question":"Will you accept Mian sb?",
-            "type":1
-        },
-        {
-            "question":"How long will you take to do this",
-            "type":2,
-            "options":["first one", "second one", "third one", "fourth one"]
-        },
-        {
-            "question":"How long will you take to do this",
-            "type":2,
-            "options":["fifth one", "sixth one", "seventh one", "eighteth one"]
-        },
-        {
-            "question":"How long will you take to do this",
-            "type":2,
-            "options":["ninth one", "Tenth one", "Eleventh one", "Twelth one"]
-        },
-        {
-            "question":"How long will you take to do this",
-            "type":2,
-            "options":["Thirteenth one", "Fourteenth one", "Fifteenth one", "Sixteenth one"]
-        }
-    ]
-}
+        data = survey_payload('ideal')
         json_data = json.dumps(data)
         response = self.client.post(self.url, json_data, content_type='application/json')
         assert response.status_code == status.HTTP_200_OK
 
     def test_survey_questions_lt_5(self):
-        self.client.force_authenticate(user=self.user)
-        data = {
-            "title": "Pakistan Zindabad",
-            "description": "Gathering Information Regarding Election 2024 Acceptance",
-            "questions": [
-                {
-                    "question": "How long will you take to do this?",
-                    "type": 1
-                },
-                {
-                    "question": "Will you accept Mian sb?",
-                    "type": 1
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["first one", "second one", "third one", "fourth one"]
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["fifth one", "sixth one", "seventh one", "eighteth one"]
-                },
-            ]
-        }
+        data = survey_payload('lt_5')
         json_data = json.dumps(data)
         response = self.client.post(self.url, json_data, content_type='application/json')
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_survey_questions_gt_10(self):
-        self.client.force_authenticate(user=self.user)
-        data = {
-            "title": "Pakistan Zindabad",
-            "description": "Gathering Information Regarding Election 2024 Acceptance",
-            "questions": [
-                {
-                    "question": "How long will you take to do this?",
-                    "type": 1
-                },
-                {
-                    "question": "Will you accept Mian sb?",
-                    "type": 1
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["first one", "second one", "third one", "fourth one"]
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["fifth one", "sixth one", "seventh one", "eighteth one"]
-                },
-                {
-                    "question": "How long will you take to do this?",
-                    "type": 1
-                },
-                {
-                    "question": "Will you accept Mian sb?",
-                    "type": 1
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["first one", "second one", "third one", "fourth one"]
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["fifth one", "sixth one", "seventh one", "eighteth one"]
-                },
-                {
-                    "question": "How long will you take to do this?",
-                    "type": 1
-                },
-                {
-                    "question": "Will you accept Mian sb?",
-                    "type": 1
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["first one", "second one", "third one", "fourth one"]
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["fifth one", "sixth one", "seventh one", "eighteth one"]
-                },
-            ]
-        }
+        data = survey_payload('gt_10')
         json_data = json.dumps(data)
         response = self.client.post(self.url, json_data, content_type='application/json')
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_survey_dropdown_questions_with_no_option(self):
-        self.client.force_authenticate(user=self.user)
-        data = {
-            "title": "Pakistan Zindabad",
-            "description": "Gathering Information Regarding Election 2024 Acceptance",
-            "questions": [
-                {
-                    "question": "How long will you take to do this?",
-                    "type": 2
-                },
-                {
-                    "question": "Will you accept Mian sb?",
-                    "type": 2
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["first one", "second one", "third one", "fourth one"]
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["fifth one", "sixth one", "seventh one", "eighteth one"]
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["ninth one", "Tenth one", "Eleventh one", "Twelth one"]
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["Thirteenth one", "Fourteenth one", "Fifteenth one", "Sixteenth one"]
-                }
-            ]
-        }
+        data = survey_payload('dropdown_questions_with_no_option')
         json_data = json.dumps(data)
         response = self.client.post(self.url, json_data, content_type='application/json')
         assert response.status_code == status.HTTP_400_BAD_REQUEST
@@ -206,16 +49,8 @@ class TestCreateSurvey:
 class TestListDeleteSurvey:
 
     def setup_method(self):
-        user_data = {
-            "first_name": "haider",
-            "email": "haider@gmail.com",
-            "username": "haider@gmail.com",
-            "password": make_password("admin1234"),
-            "is_active": True,
-            "is_locked": False
-        }
-        self.user = User.objects.create(**user_data)
 
+        self.user = User.objects.create(**user_obj())
         arr = [QuestionType(title='descriptive', created_by=self.user),
                QuestionType(title='dropdown', created_by=self.user)]
         self.q_type = QuestionType.objects.bulk_create(arr)
@@ -224,40 +59,7 @@ class TestListDeleteSurvey:
         self.url = reverse('survey_form')
         self.client.force_authenticate(user=self.user)
 
-        data = {
-            "title": "Pakistan Zindabad",
-            "description": "Gathering Information Regarding Election 2024 Acceptance",
-            "questions": [
-                {
-                    "question": "How long will you take to do this?",
-                    "type": 1
-                },
-                {
-                    "question": "Will you accept Mian sb?",
-                    "type": 1
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["first one", "second one", "third one", "fourth one"]
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["fifth one", "sixth one", "seventh one", "eighteth one"]
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["ninth one", "Tenth one", "Eleventh one", "Twelth one"]
-                },
-                {
-                    "question": "How long will you take to do this",
-                    "type": 2,
-                    "options": ["Thirteenth one", "Fourteenth one", "Fifteenth one", "Sixteenth one"]
-                }
-            ]
-        }
+        data = survey_payload('ideal')
         json_data = json.dumps(data)
         self.response = self.client.post(self.url, json_data, content_type='application/json')
         self.response_data = self.response.json()

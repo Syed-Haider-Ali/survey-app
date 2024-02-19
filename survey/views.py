@@ -1,6 +1,8 @@
 from .controller import SurveyController, QuestionTypeController, SubmitSurveyController, SurveyResultController
 from rest_framework.viewsets import ModelViewSet
 from utils.base_authentication import JWTAuthentication
+from rest_framework.permissions import IsAuthenticated
+
 
 
 survey_controller = SurveyController()
@@ -10,6 +12,7 @@ survey_result_controller = SurveyResultController()
 
 class SurveyView(ModelViewSet):
     authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
         return survey_controller.create(request)
@@ -22,6 +25,7 @@ class SurveyView(ModelViewSet):
 
 class QuestionTypeView(ModelViewSet):
     authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
         return question_type_controller.create(request)
@@ -31,6 +35,7 @@ class QuestionTypeView(ModelViewSet):
 
 class SubmitSurveyView(ModelViewSet):
     authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def create(self, request, *args, **kwargs):
         return submit_survey_controller.create(request)
@@ -38,6 +43,7 @@ class SubmitSurveyView(ModelViewSet):
 
 class SurveyResultView(ModelViewSet):
     authentication_classes = (JWTAuthentication,)
+    permission_classes = (IsAuthenticated,)
 
     def list(self, request, *args, **kwargs):
         return survey_result_controller.list(request)

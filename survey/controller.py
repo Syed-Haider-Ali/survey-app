@@ -5,13 +5,13 @@ from utils.helper import create_response, paginate_data
 from django.db import transaction
 from .models import QuestionOption, Question, SurveryFormQuestionAnswer
 from .filters import SurveyFormFilter
-from user_auth.models import User
 
 
 class SurveyController:
     serializer_class = SurveyFormSerializer
     question_serializer = QuestionSerializer
     filterset_class = SurveyFormFilter
+
     def create(self, request):
         try:
             request.POST._mutable = True
@@ -47,7 +47,6 @@ class SurveyController:
                                     return create_response({}, 'Dropdown/MCQs Questions must have options', 400)
                                 else:
                                     break
-
                         if serialized_question.is_valid():
                             question = serialized_question.save()
                             if options is not None:
@@ -67,10 +66,8 @@ class SurveyController:
     def list(self, request):
         try:
             instances = self.serializer_class.Meta.model.objects.select_related('created_by').prefetch_related('survey_questions','survey_questions__question_options', 'survey_questions__type').all()
-
             filtered_data = self.filterset_class(request.GET, queryset=instances)
             data = filtered_data.qs
-
             paginated_data = paginate_data(data, request)
             count = data.count()
 
@@ -107,16 +104,14 @@ class SurveyController:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
 
 
-
-
 class QuestionTypeController:
     serializer_class = QuestionTypeSerializer
+
     def create(self, request):
         try:
-            if not 'created_by' in request.data:
-                request.POST._mutable = True
-                request.data['created_by'] = request.user.guid
-                request.POST._mutable = False
+            request.POST._mutable = True
+            request.data['created_by'] = request.user.guid
+            request.POST._mutable = False
 
             serialized_data = self.serializer_class(data=request.data)
             if serialized_data.is_valid():
@@ -125,7 +120,6 @@ class QuestionTypeController:
             return create_response({}, get_first_error_message(serialized_data.errors, UNSUCCESSFUL),400)
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
-
 
     def list(self, request):
         try:
@@ -138,6 +132,7 @@ class QuestionTypeController:
 
 class SubmitSurveyController:
     serializer_class = SurveryFormQuestionAnswerSerializer
+
     def create(self, request):
         try:
             if not 'answers' in request.data:
@@ -161,7 +156,6 @@ class SubmitSurveyController:
                 return create_response({}, SUCCESSFUL, 200)
             else:
                 return create_response({}, "'survey_form' Not Found", 404)
-
 
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
