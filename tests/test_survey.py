@@ -6,9 +6,11 @@ from rest_framework.test import APIClient
 from user_auth.models import User
 from django.contrib.auth.hashers import make_password
 from survey.models import QuestionType
+# from django.test import Client
 
 
-@pytest.mark.skip
+
+@pytest.mark.django_db
 class TestCreateSurvey:
     def setup_method(self):
         user_data = {
@@ -24,7 +26,6 @@ class TestCreateSurvey:
         self. q_type = QuestionType.objects.bulk_create(arr)
         self.client = APIClient()
         self.url = reverse('survey_form')
-
 
     def test_survey_success(self):
         self.client.force_authenticate(user=self.user)
@@ -66,7 +67,6 @@ class TestCreateSurvey:
         response = self.client.post(self.url, json_data, content_type='application/json')
         assert response.status_code == status.HTTP_200_OK
 
-
     def test_survey_questions_lt_5(self):
         self.client.force_authenticate(user=self.user)
         data = {
@@ -96,7 +96,6 @@ class TestCreateSurvey:
         json_data = json.dumps(data)
         response = self.client.post(self.url, json_data, content_type='application/json')
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-
 
     def test_survey_questions_gt_10(self):
         self.client.force_authenticate(user=self.user)
@@ -164,7 +163,6 @@ class TestCreateSurvey:
         response = self.client.post(self.url, json_data, content_type='application/json')
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-
     def test_survey_dropdown_questions_with_no_option(self):
         self.client.force_authenticate(user=self.user)
         data = {
@@ -204,7 +202,6 @@ class TestCreateSurvey:
         json_data = json.dumps(data)
         response = self.client.post(self.url, json_data, content_type='application/json')
         assert response.status_code == status.HTTP_400_BAD_REQUEST
-
 
 
 @pytest.mark.django_db
@@ -266,7 +263,6 @@ class TestListDeleteSurvey:
         json_data = json.dumps(data)
         self.response = self.client.post(self.url, json_data, content_type='application/json')
         self.response_data = self.response.json()
-
 
     def test_get_survey(self):
         response = self.client.get(self.url)

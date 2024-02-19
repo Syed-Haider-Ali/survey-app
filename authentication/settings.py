@@ -11,27 +11,9 @@ https://docs.djangoproject.com/en/4.2/ref/settings/
 """
 import os
 from pathlib import Path
-# from dotenv import load_dotenv
-
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
-
-
-
-# load_dotenv(os.path.join(os.path.dirname(os.path.dirname(__file__)), ".env"))
-
-# DATABASE_NAME = os.environ.get("DATABASE_NAME")
-# DATABASE_USERNAME = os.environ.get("DATABASE_USERNAME")
-# DATABASE_PASSWORD = os.environ.get("DATABASE_PASSWORD")
-# DATABASE_HOST = os.environ.get("DATABASE_HOST")
-# DATABASE_PORT = os.environ.get("DATABASE_PORT")
-
-# EMAIL_HOST = os.environ.get('EMAIL_HOST')
-# EMAIL_USE_TLS = os.environ.get('EMAIL_USE_TLS')
-# EMAIL_PORT = os.environ.get('EMAIL_PORT')
-# EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
-# EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
 JWT_ENCODING_ALGO= 'HS256'
 JWT_ENCODING_SECRET_KEY= 'Cyber@123'
@@ -52,7 +34,7 @@ SECRET_KEY = 'django-insecure-n!6zoelx%b5l+jbozp8bn%gth3&nk$$e)^mq&nk^tt-+fqhj4_
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -64,7 +46,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-
+    'rest_framework',
     'user_auth',
     'survey'
 
@@ -81,11 +63,6 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'authentication.urls'
-
-# INTERNAL_IPS = [
-#     '127.0.0.1',
-# ]
-
 
 TEMPLATES = [
     {
@@ -105,7 +82,11 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'authentication.wsgi.application'
 
-
+REST_FRAMEWORK = {
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+    ),
+}
 
 
 # Database
@@ -159,3 +140,4 @@ STATIC_URL = 'static/'
 # https://docs.djangoproject.com/en/4.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+

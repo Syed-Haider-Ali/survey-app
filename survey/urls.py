@@ -6,8 +6,8 @@ urlpatterns = [
 
     path('question/type', QuestionTypeView.as_view({'post': 'create', 'get': 'list'})),
 
-    path('submit/survey', SubmitSurveyView.as_view({'post': 'create'})),
+    path('submit/survey', SubmitSurveyView.as_view({'post': 'create'}), name='submit_survey'),
 
-    path('survey/results', SurveyResultView.as_view({'get': 'list'})),
+    path('survey/results', SurveyResultView.as_view({'get': 'list'}), name='list_results'),
 
 ]

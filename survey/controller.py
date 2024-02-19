@@ -143,21 +143,25 @@ class SubmitSurveyController:
             if not 'answers' in request.data:
                 return create_response({}, 'Answers Missing', 400)
             survey_instance = SurveyFormSerializer.Meta.model.objects.filter(id=request.data['survey_form']).first()
-            answers = request.data.pop('answers')
-            question_ids = [i['question'] for i in answers if i is not None]
-            questions = Question.objects.filter(id__in=question_ids)
-            answers_list = []
-            for index, ans in enumerate(answers):
-                ans['answered_by'] = request.user
-                ans['survey_form'] = survey_instance
-                ans['question'] = questions[index]
-                if 'chosen_answer' in ans:
-                    option = QuestionOption.objects.filter(id=ans['chosen_answer']).first()
-                    ans['chosen_answer'] = option
-                answers_list.append(SurveryFormQuestionAnswer(**ans))
+            if survey_instance:
+                answers = request.data.pop('answers')
+                question_ids = [i['question'] for i in answers if i is not None]
+                questions = Question.objects.filter(id__in=question_ids)
+                answers_list = []
+                for index, ans in enumerate(answers):
+                    ans['answered_by'] = request.user
+                    ans['survey_form'] = survey_instance
+                    ans['question'] = questions[index]
+                    if 'chosen_answer' in ans:
+                        option = QuestionOption.objects.filter(id=ans['chosen_answer']).first()
+                        ans['chosen_answer'] = option
+                    answers_list.append(SurveryFormQuestionAnswer(**ans))
 
-            SurveryFormQuestionAnswer.objects.bulk_create(answers_list)
-            return create_response({}, SUCCESSFUL, 200)
+                SurveryFormQuestionAnswer.objects.bulk_create(answers_list)
+                return create_response({}, SUCCESSFUL, 200)
+            else:
+                return create_response({}, "'survey_form' Not Found", 404)
+
 
         except Exception as e:
             return create_response({'error':str(e)}, UNSUCCESSFUL, 500)
