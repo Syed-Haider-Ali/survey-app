@@ -6,7 +6,6 @@ from rest_framework.test import APIClient
 from user_auth.models import User
 from django.contrib.auth.hashers import make_password
 from survey.models import QuestionType
-# from django.test import Client
 
 
 @pytest.mark.django_db
@@ -186,3 +185,4 @@ def submit_survey_form_payload(survey_id):
         json_data = json.dumps(data)
 
         return json_data
+

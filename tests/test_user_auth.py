@@ -4,7 +4,6 @@ from rest_framework import status
 from rest_framework.test import APIClient
 from user_auth.models import User
 from django.contrib.auth.hashers import make_password
-# from django.test import Client
 
 
 

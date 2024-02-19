@@ -18,7 +18,6 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 JWT_ENCODING_ALGO= 'HS256'
 JWT_ENCODING_SECRET_KEY= 'Cyber@123'
 JWT_TOKEN_EXPIRY_DELTA= 300000
-
 AUTH_USER_MODEL = 'user_auth.User'
 
 AUTHENTICATION_BACKENDS = ["utils.base_authentication.AuthenticationBackend"]
@@ -46,7 +45,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'rest_framework',
     'user_auth',
     'survey'
 
@@ -81,13 +79,6 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'authentication.wsgi.application'
-
-REST_FRAMEWORK = {
-    'DEFAULT_RENDERER_CLASSES': (
-        'rest_framework.renderers.JSONRenderer',
-    ),
-}
-
 
 # Database
 # https://docs.djangoproject.com/en/4.2/ref/settings/#databases
