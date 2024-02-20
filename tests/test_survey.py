@@ -12,7 +12,6 @@ from .data import survey_payload, user_obj
 @pytest.mark.django_db
 class TestCreateSurvey:
     def setup_method(self):
-
         self.client = APIClient()
         self.user = User.objects.create(**user_obj())
         self.client.force_authenticate(user=self.user)
@@ -20,28 +19,44 @@ class TestCreateSurvey:
         self. q_type = QuestionType.objects.bulk_create(arr)
         self.url = reverse('survey_form')
 
-    def test_survey_success(self):
-        data = survey_payload('ideal')
-        json_data = json.dumps(data)
-        response = self.client.post(self.url, json_data, content_type='application/json')
+    def test_create_survey_success(self):
+        print('\n\ntest_create_survey_success')
+        print('url:',self.url)
+        payload = survey_payload('ideal')
+        json_payload = json.dumps(payload)
+        print('payload:',json_payload)
+        response = self.client.post(self.url, json_payload, content_type='application/json')
+        print('response:',response.json())
         assert response.status_code == status.HTTP_200_OK
 
-    def test_survey_questions_lt_5(self):
-        data = survey_payload('lt_5')
-        json_data = json.dumps(data)
-        response = self.client.post(self.url, json_data, content_type='application/json')
+    def test_create_survey_questions_lt_5(self):
+        print('\ntest_create_survey_questions_lt_5')
+        print('url:',self.url)
+        payload = survey_payload('lt_5')
+        json_payload = json.dumps(payload)
+        print('payload:',json_payload)
+        response = self.client.post(self.url, json_payload, content_type='application/json')
+        print('response:',response.json())
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_survey_questions_gt_10(self):
-        data = survey_payload('gt_10')
-        json_data = json.dumps(data)
-        response = self.client.post(self.url, json_data, content_type='application/json')
+    def test_create_survey_questions_gt_10(self):
+        print('\ntest_create_survey_questions_gt_10')
+        print('url:',self.url)
+        payload = survey_payload('gt_10')
+        json_payload = json.dumps(payload)
+        print('payload:',json_payload)
+        response = self.client.post(self.url, json_payload, content_type='application/json')
+        print('response:',response.json())
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
-    def test_survey_dropdown_questions_with_no_option(self):
-        data = survey_payload('dropdown_questions_with_no_option')
-        json_data = json.dumps(data)
-        response = self.client.post(self.url, json_data, content_type='application/json')
+    def test_create_survey_dropdown_questions_with_no_option(self):
+        print('\ntest_create_survey_dropdown_questions_with_no_option')
+        print('url:',self.url)
+        payload = survey_payload('dropdown_questions_with_no_option')
+        json_payload = json.dumps(payload)
+        print('payload:',json_payload)
+        response = self.client.post(self.url, json_payload, content_type='application/json')
+        print('response:',response.json())
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
@@ -49,7 +64,6 @@ class TestCreateSurvey:
 class TestListDeleteSurvey:
 
     def setup_method(self):
-
         self.user = User.objects.create(**user_obj())
         arr = [QuestionType(title='descriptive', created_by=self.user),
                QuestionType(title='dropdown', created_by=self.user)]
@@ -67,14 +81,24 @@ class TestListDeleteSurvey:
     def test_get_survey(self):
         response = self.client.get(self.url)
         response_data = response.json()
+        print('\ntest_get_survey')
+        print('url:',self.url)
+        print('response:',response_data)
         assert response_data['data']['count'] == 1
         assert response.status_code == status.HTTP_200_OK
 
     def test_delete_survey_success(self):
         response = self.client.delete(self.url + f"?id={self.response_data['data']['id']}")
+        print('\ntest_delete_survey_success')
+        print('url:',self.url + f"?id={self.response_data['data']['id']}")
+        print('response:', response.json())
         assert response.status_code == status.HTTP_200_OK
 
     def test_delete_survey_failed(self):
         response = self.client.delete(self.url + f"?id={111}")
+        print('\ntest_delete_survey_failed')
+        print('url:',self.url + f"?id={111}")
+        print('response:', response.json())
+        print('\n')
         assert response.status_code == status.HTTP_404_NOT_FOUND
 

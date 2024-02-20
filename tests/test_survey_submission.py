@@ -26,13 +26,21 @@ class TestSubmitSurvey:
         self.response_data = self.response.json()
 
     def test_submit_survey_success(self):
+        print('\n\ntest_submit_survey_success')
+        print('url:',self.url)
         payload = submit_survey_form_payload(self.response_data['data']['id'])
+        print('payload:',payload)
         response = self.client.post(self.url, payload, content_type='application/json')
+        print('response:', response.json())
         assert response.status_code == status.HTTP_200_OK
 
     def test_submit_survey_failed_wrong_survey_id(self):
+        print('\ntest_submit_survey_failed_wrong_survey_id')
+        print('url:',self.url)
         payload = submit_survey_form_payload(111)
+        print('payload:',payload)
         response = self.client.post(self.url, payload, content_type='application/json')
+        print('response:', response.json())
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
 
@@ -57,8 +65,12 @@ class TestListSurveyResponses:
         self.result = self.client.post(submit_survey_url, submit_survey_payload, content_type='application/json')
 
     def test_list_survey_response_success(self):
+        print('\ntest_list_survey_response_success')
+        print('url:',self.url + f"?id={self.survey_response['data']['id']}")
         response = self.client.get(self.url + f"?id={self.survey_response['data']['id']}")
         response_data = response.json()
+        print('response:',response_data)
+        print('\n')
         assert response_data['data']['total_responses'] == 1
         assert response.status_code == status.HTTP_200_OK
 
