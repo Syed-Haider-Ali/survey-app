@@ -18,3 +18,6 @@ Run application
 
 Run Tests
 **pytest**
+
+To display print statements on terminal
+**pytest -s**
