@@ -19,7 +19,6 @@ class TestSubmitSurvey:
         self.client.force_authenticate(user=self.user)
         self.survey_url = reverse('survey_form')
         self.url = reverse('submit_survey')
-
         data = survey_payload('ideal')
         json_data = json.dumps(data)
         self.response = self.client.post(self.survey_url, json_data, content_type='application/json')
